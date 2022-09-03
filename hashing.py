@@ -46,7 +46,7 @@ class HashRing:
             delete_list -= set(filter(dist, origin.resources.keys()))
         
         for key in delete_list:
-            print(f"Moving a resource {key} from {origin.hash_value} to {destination.hash_value}")
+            print(f"\tMoving a resource {key} from {origin.hash_value} to {destination.hash_value}")
             destination.resources[key] = origin.resources[key]
             del origin.resources[key]
     
@@ -83,7 +83,7 @@ class HashRing:
             return None
         
         print(f"Removing the node {hash_value}")
-        self.move_resources(temp.next, temp, True)
+        self.move_resources(temp, temp.next, True)
         temp.previous.next = temp.next
         temp.next.previous = temp.previous
 
@@ -101,8 +101,7 @@ class HashRing:
             return None
         
         temp = self.head
-        condition = False
-        while condition:
+        while True:
             print(f"Node: {temp.hash_value}, ", end=" ")
             print("Resources: ", end=" ")
             if not bool(temp.resources):
@@ -112,7 +111,8 @@ class HashRing:
                     print(f"{i}", end=" ")
                 temp = temp.next
                 print(" ")
-                condition = (temp == self.head)
+                if temp == self.head:
+                    break
                     
         print("*****")
 
@@ -130,7 +130,7 @@ class HashRing:
         msg += f"Next node is {new_node.next.hash_value}."
         print(msg)
 
-        self.move_resources(new_node, new_node.next, False)
+        self.move_resources(new_node.next, new_node, False)
         if hash_value < self.head.hash_value:
             self.head = new_node
     
@@ -155,16 +155,16 @@ def main() -> None:
     
     nodes_to_add = [12, 18]
     add_all_nodes(hr, nodes_to_add)
-    
     resources_to_add = [24, 21, 16, 23, 2, 29, 28, 7, 10]
     add_all_resources(hr, resources_to_add)
-
     hr.print()
 
     new_nodes = [5, 27, 30]
     add_all_nodes(hr, new_nodes)
+    hr.print()
 
-    # hr.print()
+    hr.remove_node(12)
+    hr.print()
 
 
 def add_all_nodes(hash_ring: HashRing, nodes: List[int]) -> None:
