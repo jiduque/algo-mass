@@ -7,7 +7,7 @@ def distance(k: int, a: HashValue, b: HashValue) -> int:
         output += 2 ** k
     return output
 
-# TODO: need to update to look using finger table
+
 def closest_node(hash_ring: HashRingData, hash_value: HashValue) -> Node:
     curr_node, next_node = hash_ring.head, hash_ring.head.next
 
@@ -85,10 +85,8 @@ def add_resource(hash_ring: HashRingData, resource: Resource) -> None:
 
     target_node = lookup_node(hash_ring, resource)
     if target_node is None:
-        print("Can't add a resource to an empty hashring.")
         return None
     
-    print(f"Adding a resource {resource}")
     val = f"some stupid val for {resource}"
     target_node.resources[resource] = val
 
@@ -96,19 +94,39 @@ def add_resource(hash_ring: HashRingData, resource: Resource) -> None:
 def remove_node(hash_ring: HashRingData, hash_value: HashValue) -> None:
     temp = lookup_node(hash_ring, hash_value)
     if temp.hash_value != hash_value:
-        print("Nothing to remove")
         return None
     
-    print(f"Removing the node {hash_value}")
     move_resources(hash_ring, temp, temp.next, True)
     temp.previous.next = temp.next
     temp.next.previous = temp.previous
 
-    if hash_ring.head.hash_value == hash_value:
-        hash_ring.head = temp.next if hash_ring.head != hash_ring.head.next else None
+    head = hash_ring.head
+    if head.hash_value == hash_value:
+        head = temp.next if head != head.next else None
 
     return temp.next
+
+
+def make_finger_table(hash_ring: HashRingData, node: Node) -> None:
+    k = hash_ring.num_nodes
+    values = map(lambda i: 2 ** i, range(k))
+    for f_i in values:
+        x = node.hash_value + f_i
+        succesor = lookup_node(hash_ring, x)
+        node.finger_table[x] = succesor
+
+
+def initialize_finger_tables(hash_ring: HashRingData) -> None:
+    head = hash_ring.head
+    if head is None:
+        return None
     
+    make_finger_table(head)
+    curr = head.next
+    while curr != head:
+        make_finger_table(curr)
+        curr = curr.next
+
 
 # TODO: implement
 def update_finger_table(hash_ring: HashRingData, node: Node) -> None:

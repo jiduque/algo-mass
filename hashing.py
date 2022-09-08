@@ -24,7 +24,7 @@ class HashRing:
         add_node(self.hashring_data, new_node)
 
         new_head = self.hashring_data.head
-        msg = print(f"Adding a head node {new_head.hash_value} ...")
+        msg = f"Adding a head node {new_head.hash_value} ..."
 
         if old_head is not None:
             msg = f"Adding a node {new_node.hash_value}. Previous node is {new_node.previous.hash_value}. "
@@ -33,10 +33,50 @@ class HashRing:
         print(msg)
              
     def add_resource(self, resource: Resource) -> None:
-        add_resource(self.hashring_data, resource)
+        if resource not in self.hashring_data.legal_range:
+            return None
+
+        target_node = lookup_node(self.hashring_data, resource)
+        if target_node is None:
+            print("Can't add a resource to an empty hashring.")
+            return None
+        
+        print(f"Adding a resource {resource}")
+        val = f"some stupid val for {resource}"
+        target_node.resources[resource] = val
 
     def remove_node(self, hash_value: HashValue) -> None:
-        remove_node(self.hashring_data, hash_value)
+        temp = lookup_node(self.hashring_data, hash_value)
+        if temp.hash_value != hash_value:
+            print("Nothing to remove")
+            return None
+        
+        print(f"Removing the node {hash_value}")
+        move_resources(self.hashring_data, temp, temp.next, True)
+        temp.previous.next = temp.next
+        temp.next.previous = temp.previous
+
+        head = self.hashring_data.head
+        if head.hash_value == hash_value:
+            head = temp.next if head != head.next else None
+
+        return temp.next
+
+    def build_finger_tables(self) -> None:
+        head = self.hashring_data.head
+        if head is None:
+            print("Cannot build finger tables for empty hash ring")
+            return None
+        
+        make_finger_table(self.hashring_data, head)
+        print(f"Finger table for {head.hash_value} is complete")
+
+        curr = head.next
+        while curr != head:
+            make_finger_table(self.hashring_data, curr)
+            print(f"Finger table for {curr.hash_value} is complete")
+            curr = curr.next
+
 
     def print(self) -> None:
         print("*****")
@@ -81,6 +121,8 @@ def main() -> None:
 
     hr.remove_node(12)
     hr.print()
+
+    hr.build_finger_tables()
 
 
 def add_all_nodes(hash_ring: HashRing, nodes: list[int]) -> None:
