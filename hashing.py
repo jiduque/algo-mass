@@ -7,7 +7,7 @@ class HashRing:
         self.hashring_data = HashRingData(num_nodes)
     
     def lookup_node(self, hash_value: HashValue) -> Node | None:
-        return lookup_node(self.hashring_data, hash_value)
+        return lookup_node(self.hashring_data, hash_value, closest_node_finger)
 
     def move_resources(self, origin: Node, destination: Node, delete: bool) -> None:
         delete_list = resources_to_move(self.hashring_data, origin, destination, delete)
@@ -31,6 +31,7 @@ class HashRing:
             msg += f"Next node is {new_node.next.hash_value}."
             
         print(msg)
+        self.build_finger_tables()
              
     def add_resource(self, resource: Resource) -> None:
         if resource not in self.hashring_data.legal_range:
@@ -59,8 +60,9 @@ class HashRing:
         head = self.hashring_data.head
         if head.hash_value == hash_value:
             head = temp.next if head != head.next else None
+        
+        self.build_finger_tables()
 
-        return temp.next
 
     def build_finger_tables(self) -> None:
         head = self.hashring_data.head
@@ -121,8 +123,6 @@ def main() -> None:
 
     hr.remove_node(12)
     hr.print()
-
-    hr.build_finger_tables()
 
 
 def add_all_nodes(hash_ring: HashRing, nodes: list[int]) -> None:

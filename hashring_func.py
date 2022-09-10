@@ -1,4 +1,5 @@
-from hashring_data import Node, HashValue, HashRingData, Resource
+from typing import Callable
+from hashring_data import Node, HashValue, HashRingData, Resource, FingerTable
 
 
 def distance(k: int, a: HashValue, b: HashValue) -> int:
@@ -22,12 +23,35 @@ def closest_node(hash_ring: HashRingData, hash_value: HashValue) -> Node:
     return next_node
 
 
-def lookup_node(hash_ring: HashRingData, hash_value: HashValue) -> Node | None:
+def _potential_successor(finger_table: FingerTable, hash_value: HashValue) -> Node:
+    min_key = min(
+        finger_table.keys(), 
+        key=lambda finger: abs(hash_value - finger)
+    )
+    return finger_table[min_key]    
+
+
+def closest_node_finger(hash_ring: HashRingData, hash_value: HashValue) -> Node:
+    curr_node = hash_ring.head
+    next_node = _potential_successor(curr_node.finger_table, hash_value)
+
+    dist = lambda x: distance(hash_ring.num_nodes, x.hash_value, hash_value) 
+    while dist(curr_node) > dist(next_node):
+        curr_node = next_node
+        next_node = _potential_successor(curr_node.finger_table, hash_value)
+    
+    if curr_node.hash_value == hash_value:
+        return curr_node
+    
+    return next_node
+
+
+def lookup_node(hash_ring: HashRingData, hash_value: HashValue, search_func: Callable = closest_node) -> Node | None:
     not_in_range = hash_value not in hash_ring.legal_range
     empty = hash_ring.head is None    
     if not_in_range or empty:
         return None
-    return closest_node(hash_ring, hash_value)
+    return search_func(hash_ring, hash_value)
 
 
 def resources_to_move(hash_ring: HashRingData, origin: Node, destination: Node, delete: bool) -> set[int]:
@@ -52,7 +76,6 @@ def move_resources(hash_ring: HashRingData, origin: Node, destination: Node, del
         move(key, origin, destination)
 
 
-# TODO: need to add finger table update to the add and remove node functions
 def _add_node_empty(hash_ring: HashRingData, new_node: Node) -> None:
     new_node.next = new_node
     new_node.previous = new_node
@@ -104,15 +127,13 @@ def remove_node(hash_ring: HashRingData, hash_value: HashValue) -> None:
     if head.hash_value == hash_value:
         head = temp.next if head != head.next else None
 
-    return temp.next
 
-
-def make_finger_table(hash_ring: HashRingData, node: Node) -> None:
+def make_finger_table(hash_ring: HashRingData, node: Node, search_func: Callable = closest_node) -> None:
     k = hash_ring.num_nodes
     values = map(lambda i: 2 ** i, range(k))
     for f_i in values:
         x = node.hash_value + f_i
-        succesor = lookup_node(hash_ring, x)
+        succesor = lookup_node(hash_ring, x, search_func)
         node.finger_table[x] = succesor
 
 
@@ -126,9 +147,3 @@ def initialize_finger_tables(hash_ring: HashRingData) -> None:
     while curr != head:
         make_finger_table(curr)
         curr = curr.next
-
-
-# TODO: implement
-def update_finger_table(hash_ring: HashRingData, node: Node) -> None:
-    pass
-
