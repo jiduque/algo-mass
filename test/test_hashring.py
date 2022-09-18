@@ -3,8 +3,8 @@ import unittest
 
 from io import StringIO
 
-import hashring
-import _hashring.funcs as hr_funcs
+import dat_mass.hashring as hashring
+import dat_mass._hashring.funcs as hr_funcs
 
 
 class TestHashRing(unittest.TestCase):

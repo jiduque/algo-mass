@@ -1,8 +1,8 @@
 from typing import Callable, Iterable
 
-import _hashring.funcs as hashring_func
+import dat_mass._hashring.funcs as hashring_func
 
-from _hashring.data import Node, HashValue, HashRingData, Resource
+from dat_mass._hashring.data import Node, HashValue, HashRingData, Resource
 
 
 class HashRing:
@@ -69,7 +69,7 @@ class HashRing:
 
         head = self.hashring_data.head
         if head.hash_value == hash_value:
-            head = temp.next if head != head.next else None
+            self.hashring_data.head = temp.next if head != head.next else None
         
         self.build_finger_tables()
 

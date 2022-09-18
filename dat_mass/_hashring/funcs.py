@@ -1,5 +1,5 @@
 from typing import Callable
-from _hashring.data import Node, HashValue, HashRingData, Resource, FingerTable
+from .data import Node, HashValue, HashRingData, Resource, FingerTable
 
 
 def distance(k: int, a: HashValue, b: HashValue) -> int:
@@ -134,12 +134,12 @@ def remove_node(hash_ring: HashRingData, hash_value: HashValue) -> None:
         hash_ring.head = temp.next if head != head.next else None
 
 
-def make_finger_table(hash_ring: HashRingData, node: Node, search_func: Callable = closest_node) -> None:
+def make_finger_table(hash_ring: HashRingData, node: Node) -> None:
     k = hash_ring.num_nodes
     values = map(lambda i: 2 ** i, range(k))
     for f_i in values:
         x = node.hash_value + f_i
-        succesor = lookup_node(hash_ring, x, search_func)
+        succesor = lookup_node(hash_ring, x, closest_node)
         node.finger_table[x] = succesor
 
 
