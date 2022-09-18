@@ -1,19 +1,29 @@
-from hashring_data import Node, HashValue, HashRingData, Resource
-from hashring_func import *
+from typing import Callable, Iterable
+
+import _hashring.funcs as hashring_func
+
+from _hashring.data import Node, HashValue, HashRingData, Resource
 
 
 class HashRing:
     def __init__(self, num_nodes: int) -> None:
         self.hashring_data = HashRingData(num_nodes)
+        self._initialized = False
+
+    @property
+    def _lookup_func(self) -> Callable:
+        if self._initialized:
+            return hashring_func.closest_node_finger
+        return hashring_func.closest_node
     
     def lookup_node(self, hash_value: HashValue) -> Node | None:
-        return lookup_node(self.hashring_data, hash_value, closest_node_finger)
+        return hashring_func.lookup_node(self.hashring_data, hash_value, self._lookup_func)
 
     def move_resources(self, origin: Node, destination: Node, delete: bool) -> None:
-        delete_list = resources_to_move(self.hashring_data, origin, destination, delete)
+        delete_list = hashring_func.resources_to_move(self.hashring_data, origin, destination, delete)
         for key in delete_list:
             print(f"\tMoving a resource {key} from {origin.hash_value} to {destination.hash_value}")
-            move(key, origin, destination)
+            hashring_func.move(key, origin, destination)
     
     def add_node(self, hash_value: HashValue) -> None:
         if hash_value not in self.hashring_data.legal_range:
@@ -21,7 +31,7 @@ class HashRing:
         
         old_head = self.hashring_data.head
         new_node = Node(hash_value)
-        add_node(self.hashring_data, new_node)
+        hashring_func.add_node(self.hashring_data, new_node)
 
         new_head = self.hashring_data.head
         msg = f"Adding a head node {new_head.hash_value} ..."
@@ -37,7 +47,7 @@ class HashRing:
         if resource not in self.hashring_data.legal_range:
             return None
 
-        target_node = lookup_node(self.hashring_data, resource)
+        target_node = self.lookup_node(resource)
         if target_node is None:
             print("Can't add a resource to an empty hashring.")
             return None
@@ -47,13 +57,13 @@ class HashRing:
         target_node.resources[resource] = val
 
     def remove_node(self, hash_value: HashValue) -> None:
-        temp = lookup_node(self.hashring_data, hash_value)
+        temp = self.lookup_node(hash_value)
         if temp.hash_value != hash_value:
             print("Nothing to remove")
             return None
         
         print(f"Removing the node {hash_value}")
-        move_resources(self.hashring_data, temp, temp.next, True)
+        hashring_func.move_resources(self.hashring_data, temp, temp.next, True)
         temp.previous.next = temp.next
         temp.next.previous = temp.previous
 
@@ -63,22 +73,22 @@ class HashRing:
         
         self.build_finger_tables()
 
-
     def build_finger_tables(self) -> None:
         head = self.hashring_data.head
         if head is None:
             print("Cannot build finger tables for empty hash ring")
             return None
         
-        make_finger_table(self.hashring_data, head)
+        hashring_func.make_finger_table(self.hashring_data, head)
         print(f"Finger table for {head.hash_value} is complete")
 
         curr = head.next
         while curr != head:
-            make_finger_table(self.hashring_data, curr)
+            hashring_func.make_finger_table(self.hashring_data, curr)
             print(f"Finger table for {curr.hash_value} is complete")
             curr = curr.next
 
+        self._initialized = True
 
     def print(self) -> None:
         print("*****")
@@ -105,35 +115,11 @@ class HashRing:
                     break
                     
         print("*****")
-                    
 
-def main() -> None:
-    num_nodes = 5
-    hr = HashRing(num_nodes)
-    
-    nodes_to_add = [12, 18]
-    add_all_nodes(hr, nodes_to_add)
-    resources_to_add = [24, 21, 16, 23, 2, 29, 28, 7, 10]
-    add_all_resources(hr, resources_to_add)
-    hr.print()
+    def add_resources(self, resources: Iterable[Resource]) -> None:
+        for resource in resources:
+            self.add_resource(resource)
 
-    new_nodes = [5, 27, 30]
-    add_all_nodes(hr, new_nodes)
-    hr.print()
-
-    hr.remove_node(12)
-    hr.print()
-
-
-def add_all_nodes(hash_ring: HashRing, nodes: list[int]) -> None:
-    for node in nodes:
-        hash_ring.add_node(node)
-
-
-def add_all_resources(hash_ring: HashRing, resources: list[Resource]) -> None:
-    for resource in resources:
-        hash_ring.add_resource(resource)
-
-
-if __name__ == "__main__":
-    main()
+    def add_nodes(self, nodes: Iterable[HashValue]) -> None:
+        for node in nodes:
+            self.add_node(node)
