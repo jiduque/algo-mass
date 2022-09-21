@@ -55,5 +55,24 @@ def main() -> None:
         print(f"{val} {val in bf}")
 
 
+# TODO: Implement look at https://people.engr.tamu.edu/ajiang/bloom.pdf
+class WeightedBloomFilter(BloomFilter):
+    def __init__(self, n: int, f: float) -> None:
+        super().__init__(n, f)
+        raise NotImplementedError
+
+
+# TODO: Implement look at https://core.ac.uk/download/pdf/4891089.pdf
+class AdaptiveBloomFilter(BloomFilter):
+    def __init__(self, n: int, f: float) -> None:
+        super().__init__(n, f)
+        raise NotImplementedError
+
+
+class QuotientFilter:
+    def __init__(self) -> None:
+        raise NotImplementedError
+
+
 if __name__ == '__main__':
     main()
