@@ -4,7 +4,6 @@ import unittest
 from io import StringIO
 
 import dat_mass.hashring as hashring
-import dat_mass._hashring.funcs as hr_funcs
 
 
 class TestHashRing(unittest.TestCase):
@@ -99,7 +98,7 @@ class TestUnits(unittest.TestCase):
         expected_output = [8, 15, 24]
         for i in range(3):
             a, b = inputs[i]
-            actual_output = hr_funcs.distance(k, a, b)
+            actual_output = hashring.distance(k, a, b)
             self.assertEqual(expected_output[i], actual_output)
 
 
