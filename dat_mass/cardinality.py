@@ -1,6 +1,7 @@
 from abc import ABC
 from typing import Hashable
-from random import random
+
+from mmh3 import hash, hash64, hash128
 
 
 class Counter(ABC):
@@ -12,18 +13,20 @@ class Counter(ABC):
 
 
 class ProbCounter:
-    def __init__(self, n: int) -> None:
+    def __init__(self, n: int = 32) -> None:
+        funcs = {32: hash, 64: hash64, 128: hash128}
+        assert n in [32, 64, 128]
+
         self.n = n
         self.x = 0
+        self._hash = funcs[n]
 
     def estimate(self) -> int:
         return 2 ** self.x
 
-    # TODO: use better hashing method
     def update(self, item: Hashable):
-        hash_int = hash(item)
-        h = format(hash_int, "b")
-        rho = first_bit(h)
+        h = self._hash(item, seed=0)
+        rho = first_bit(str(h))
         self.x = max(self.x, rho)
 
 
@@ -41,3 +44,12 @@ def first_bit(bit_string: str) -> int:
         output -= 1
 
     return output + 1
+
+
+def main() -> None:
+    pc = ProbCounter()
+    pc.update("1")
+
+
+if __name__ == '__main__':
+    main()
